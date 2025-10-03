@@ -1,0 +1,454 @@
+import React, { useState, useMemo, useEffect } from "react";
+
+// Simple single-file shopping page built with Tailwind CSS
+// - Default export is a React component
+// - Features: search, category filter, sort, product grid, cart sidebar, checkout modal
+// - Designed to be dropped into a Vite/CRA/Next app that already has Tailwind configured
+
+export default function BoutiqueReact() {
+  // sample product catalog
+  const PRODUCTS = [
+    {
+      id: "p1",
+      title: "Sneakers Urbaines",
+      price: 79.99,
+      category: "Chaussures",
+      image: "https://picsum.photos/seed/sneakers/600/400",
+      rating: 4.5,
+    },
+    {
+      id: "p2",
+      title: "Sac à Dos Voyage",
+      price: 49.5,
+      category: "Sacs",
+      image: "https://picsum.photos/seed/backpack/600/400",
+      rating: 4.2,
+    },
+    {
+      id: "p3",
+      title: "Montre Minimaliste",
+      price: 129.0,
+      category: "Accessoires",
+      image: "https://picsum.photos/seed/watch/600/400",
+      rating: 4.8,
+    },
+    {
+      id: "p4",
+      title: "T-shirt Coton Bio",
+      price: 19.99,
+      category: "Vêtements",
+      image: "https://picsum.photos/seed/tshirt/600/400",
+      rating: 4.1,
+    },
+    {
+      id: "p5",
+      title: "Jean Coupe Droite",
+      price: 59.0,
+      category: "Vêtements",
+      image: "https://picsum.photos/seed/jeans/600/400",
+      rating: 4.3,
+    },
+    {
+      id: "p6",
+      title: "Casquette Classique",
+      price: 14.5,
+      category: "Accessoires",
+      image: "https://picsum.photos/seed/cap/600/400",
+      rating: 3.9,
+    },
+  ];
+
+  // UI state
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("Tous");
+  const [sort, setSort] = useState("popular");
+  const [cart, setCart] = useState(() => {
+    try {
+      const raw = localStorage.getItem("cart_v1");
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+  const [showCart, setShowCart] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem("cart_v1", JSON.stringify(cart));
+  }, [cart]);
+
+  const categories = useMemo(() => {
+    const cats = new Set(PRODUCTS.map((p) => p.category));
+    return ["Tous", ...Array.from(cats)];
+  }, []);
+
+  const filtered = useMemo(() => {
+    let list = PRODUCTS.filter((p) => {
+      const matchesQuery = p.title.toLowerCase().includes(query.toLowerCase());
+      const matchesCategory = category === "Tous" ? true : p.category === category;
+      return matchesQuery && matchesCategory;
+    });
+
+    if (sort === "price_asc") list.sort((a, b) => a.price - b.price);
+    else if (sort === "price_desc") list.sort((a, b) => b.price - a.price);
+    else if (sort === "rating") list.sort((a, b) => b.rating - a.rating);
+
+    return list;
+  }, [query, category, sort]);
+
+  const cartItems = useMemo(() => {
+    return Object.values(cart);
+  }, [cart]);
+
+  const cartTotal = useMemo(() => {
+    return cartItems.reduce((s, it) => s + it.price * it.qty, 0);
+  }, [cartItems]);
+
+  // actions
+  function addToCart(product) {
+    setCart((prev) => {
+      const existing = prev[product.id];
+      const next = { ...prev };
+      next[product.id] = {
+        ...product,
+        qty: existing ? existing.qty + 1 : 1,
+      };
+      setMessage(`${product.title} ajouté au panier`);
+      setTimeout(() => setMessage(null), 2000);
+      return next;
+    });
+  }
+
+  function updateQty(id, qty) {
+    setCart((prev) => {
+      const next = { ...prev };
+      if (!next[id]) return prev;
+      if (qty <= 0) delete next[id];
+      else next[id].qty = qty;
+      return next;
+    });
+  }
+
+  function clearCart() {
+    setCart({});
+  }
+
+  function fakeCheckout() {
+    // simulate checkout success
+    clearCart();
+    setShowCheckout(false);
+    setShowCart(false);
+    setMessage("Commande passée avec succès 🎉");
+    setTimeout(() => setMessage(null), 3000);
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <header className="max-w-6xl mx-auto flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-extrabold">La Boutique</h1>
+          <p className="text-sm text-gray-600">Shopping simple et moderne</p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <div className="hidden md:flex items-center gap-2">
+            <input
+              aria-label="Recherche"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher un produit..."
+              className="px-3 py-2 rounded-lg border w-56"
+            />
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="px-3 py-2 rounded-lg border"
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="px-3 py-2 rounded-lg border"
+            >
+              <option value="popular">Populaire</option>
+              <option value="price_asc">Prix : croissant</option>
+              <option value="price_desc">Prix : décroissant</option>
+              <option value="rating">Meilleures notes</option>
+            </select>
+          </div>
+
+          <button
+            onClick={() => setShowCart(true)}
+            className="relative inline-flex items-center px-3 py-2 bg-white border rounded-lg shadow-sm"
+            aria-label="Voir le panier"
+          >
+            🛒
+            <span className="ml-2 hidden sm:inline">Panier</span>
+            {cartItems.length > 0 && (
+              <span className="absolute -top-1 -right-1 text-xs bg-red-500 text-white rounded-full px-2">{cartItems.length}</span>
+            )}
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left column: filters (mobile: collapsed into header) */}
+        <aside className="lg:col-span-1 hidden lg:block">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="font-semibold mb-2">Filtres</h3>
+            <label className="block text-sm text-gray-600">Catégorie</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="mt-2 w-full px-3 py-2 rounded border"
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+
+            <label className="block mt-4 text-sm text-gray-600">Trier</label>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="mt-2 w-full px-3 py-2 rounded border"
+            >
+              <option value="popular">Populaire</option>
+              <option value="price_asc">Prix : croissant</option>
+              <option value="price_desc">Prix : décroissant</option>
+              <option value="rating">Meilleures notes</option>
+            </select>
+          </div>
+        </aside>
+
+        {/* Product grid */}
+        <section className="lg:col-span-3">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Produits</h2>
+            <div className="block lg:hidden">
+              <input
+                aria-label="Recherche mobile"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher..."
+                className="px-3 py-2 rounded-lg border w-48"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {filtered.map((p) => (
+              <article key={p.id} className="bg-white rounded-lg shadow overflow-hidden">
+                <img src={p.image} alt={p.title} className="w-full h-44 object-cover" />
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">{p.title}</h3>
+                    <div className="text-sm text-yellow-600">⭐ {p.rating}</div>
+                  </div>
+                  <p className="mt-2 text-lg font-bold">{p.price.toFixed(2)} €</p>
+                  <div className="mt-4 flex items-center gap-2">
+                    <button
+                      onClick={() => addToCart(p)}
+                      className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm shadow"
+                    >
+                      Ajouter
+                    </button>
+                    <button
+                      onClick={() => {
+                        setMessage(`Aperçu de ${p.title}`);
+                        setTimeout(() => setMessage(null), 1500);
+                      }}
+                      className="px-3 py-2 rounded-lg border text-sm"
+                    >
+                      Voir
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+
+            {filtered.length === 0 && (
+              <div className="col-span-full bg-white p-6 rounded shadow text-center">Aucun produit trouvé.</div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      {/* Cart drawer */}
+      {showCart && (
+        <div className="fixed inset-0 z-50 flex">
+          <div className="flex-1" onClick={() => setShowCart(false)} />
+          <aside className="w-96 bg-white p-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Mon panier</h3>
+              <button onClick={() => setShowCart(false)} className="text-gray-600">✖</button>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              {cartItems.length === 0 && <div className="text-gray-600">Votre panier est vide.</div>}
+
+              {cartItems.map((it) => (
+                <div key={it.id} className="flex items-center gap-3">
+                  <img src={it.image} className="w-16 h-12 object-cover rounded" />
+                  <div className="flex-1">
+                    <div className="font-medium">{it.title}</div>
+                    <div className="text-sm text-gray-600">{it.price.toFixed(2)} €</div>
+                    <div className="mt-1 flex items-center gap-2">
+                      <button
+                        onClick={() => updateQty(it.id, it.qty - 1)}
+                        className="px-2 py-1 border rounded"
+                      >
+                        -
+                      </button>
+                      <span className="px-2">{it.qty}</span>
+                      <button
+                        onClick={() => updateQty(it.id, it.qty + 1)}
+                        className="px-2 py-1 border rounded"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">Total</div>
+                <div className="font-bold">{cartTotal.toFixed(2)} €</div>
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <button
+                  disabled={cartItems.length === 0}
+                  onClick={() => setShowCheckout(true)}
+                  className="flex-1 px-3 py-2 rounded-lg bg-green-600 text-white"
+                >
+                  Commander
+                </button>
+                <button
+                  onClick={clearCart}
+                  className="px-3 py-2 rounded-lg border"
+                >
+                  Vider
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* Checkout modal */}
+      {showCheckout && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black opacity-40" onClick={() => setShowCheckout(false)} />
+          <div className="bg-white rounded-lg p-6 z-70 w-full max-w-lg">
+            <h3 className="text-xl font-semibold">Paiement</h3>
+            <p className="text-sm text-gray-600 mt-2">Entrez les informations factices pour simuler la commande.</p>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                fakeCheckout();
+              }}
+              className="mt-4 space-y-3"
+            >
+              <div>
+                <label className="block text-sm">Nom</label>
+                <input required className="w-full px-3 py-2 rounded border" />
+              </div>
+              <div>
+                <label className="block text-sm">Adresse</label>
+                <input required className="w-full px-3 py-2 rounded border" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-sm">Carte</label>
+                  <input required className="w-full px-3 py-2 rounded border" placeholder="4242 4242 4242 4242" />
+                </div>
+                <div>
+                  <label className="block text-sm">Date / CVC</label>
+                  <input required className="w-full px-3 py-2 rounded border" placeholder="12/29 • 123" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">Total: <span className="font-bold">{cartTotal.toFixed(2)} €</span></div>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setShowCheckout(false)} className="px-3 py-2 rounded border">Annuler</button>
+                  <button type="submit" className="px-3 py-2 rounded bg-indigo-600 text-white">Payer</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* message/toast */}
+      {message && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-black text-white px-4 py-2 rounded-lg shadow">{message}</div>
+      )}
+
+      <footer className="max-w-6xl mx-auto mt-12 text-center text-sm text-gray-500">© {new Date().getFullYear()} La Boutique — Prototype</footer>
+    </div>
+  );
+}
+import React, { useState, useMemo, useEffect } from "react";
+
+// Simple single-file shopping page built with Tailwind CSS
+// - Default export is a React component
+// - Features: search, category filter, sort, product grid, cart sidebar, checkout modal
+// - Designed to be dropped into a Vite/CRA/Next app that already has Tailwind configured
+
+export default function BoutiqueReact() {
+  // sample product catalog
+  const PRODUCTS = [
+    {
+      id: "p1",
+      title: "Sneakers Urbaines",
+      price: 79.99,
+      category: "Chaussures",
+      image: "https://picsum.photos/seed/sneakers/600/400",
+      rating: 4.5,
+    },
+    {
+      id: "p2",
+      title: "Sac à Dos Voyage",
+      price: 49.5,
+      category: "Sacs",
+      image: "https://picsum.photos/seed/backpack/600/400",
+      rating: 4.2,
+    },
+    {
+      id: "p3",
+      title: "Montre Minimaliste",
+      price: 129.0,
+      category: "Accessoires",
+      image: "https://picsum.photos/seed/watch/600/400",
+      rating: 4.8,
+    },
+    {
+      id: "p4",
+      title: "T-shirt Coton Bio",
+      price: 19.99,
+      category: "Vêtements",
+      image: "https://picsum.photos/seed/tshirt/600/400",
+      rating: 4.1,
+    },
+    {
+      id: "p5",
+      title: "Jean Coupe Droite",
+      price: 59.0,
+      category: "Vêtements",
+      image: "https://picsum.photos/seed/jeans/600/400",
+      rating: 4.3,
+    },
+    {
