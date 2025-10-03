@@ -1,1 +1,19 @@
-j'ai voulu m'y essayer pour voir ce que ça donne
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Présentation de Sung Jinwoo</title>
+</head>
+<body style="font-family: Arial; text-align: center; background-color: #f0f0f0;">
+<h1>Sung Jinwoo</h1>
+<img src="https://i.pinimg.com/736x/53/1c/10/531c10035cd2ba473aa427f11262999f.jpg" alt="Sung Jinwoo" width="200">
+<p><strong>Manga : </strong> Solo Leveling</p>
+<p>Sung Jinwoo est le personnage principal du manga Solo Leveling.
+Il était le chasseur le plus faible mais suite à un événement où il a frolé la mort il est devenu le plus
+puissant évoluant à chaque combat et en preogressant de niveau comme 
+dans un jeu vidéo.
+Son pouvoir est celui des ombres, il peut ramener certaines entités sous forme d'ombre à son service.<br>
+Ce pouvoir lui vient du <em>Monarque des ombres</em></p>
+<p><strong>But:</strong> Devenir le plus fort pour sauver sa mère du coma</p>
+</body>
+</html>
