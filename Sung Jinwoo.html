@@ -15,5 +15,19 @@ dans un jeu vidéo.
 Son pouvoir est celui des ombres, il peut ramener certaines entités sous forme d'ombre à son service.<br>
 Ce pouvoir lui vient du <em>Monarque des ombres</em></p>
 <p><strong>But:</strong> Devenir le plus fort pour sauver sa mère du coma</p>
+<div class="video">
+<iframe
+src="https://www.youtube.com/embed/Mm-QlmY0vTM"
+title="Sung Jinwoo vs Baruka"
+width="560"
+height="315"
+frameborder="0"
+allow="acceleremeter; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+allowfullscreen>
+</iframe>
+</div>
+<p>Si la vidéo ne se charge pas, regarde-la directement sur 
+   <a href="https://www.youtube.com/watch?v=Mm-QlmY0vTM">youtube</a>
+</p>
 </body>
 </html>
